@@ -1,18 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"text/template"
 )
 
-func index(w http.ResponseWriter, r *http.Request) {
-	files := []string{"templates/layout.html",
-		"templates/navbar.html",
-		"templates/index.html"}
+func generateHTML(w http.ResponseWriter, data interface{}, fn ...string) {
+	var files []string
+	for _, file := range fn {
+		files = append(files, fmt.Sprintf("templates/%s.html", file))
+	}
 	templates := template.Must(template.ParseFiles(files...))
+	templates.ExecuteTemplate(writer, "layout", data)
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	// files := []string{"templates/layout.html",
+	// 	"templates/navbar.html",
+	// 	"templates/index.html"}
+	// templates := template.Must(template.ParseFiles(files...))
+	// threads, err := data.Threads()
+	// if err == nil {
+	// 	templates.ExecuteTemplate(w, "layout", threads)
+	// }
+
 	threads, err := data.Threads()
 	if err == nil {
-		templates.ExecuteTemplate(w, "layout", threads)
+		_, err := session(w, r)
+		if err != nil {
+			generateHTML(w, threads, "layout", "public.navbar", "index")
+		} else {
+			generateHTML(w, threads, "layout", "private.navbar", "index")
+		}
 	}
 }
 
